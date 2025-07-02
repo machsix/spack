@@ -1390,6 +1390,14 @@ variant_single_value(PackageNode, Variant)
      auto_variant(Variant, VariantID),
      not variant_type(VariantID, "multi").
 
+% to respect requirements/preferences we need to define that an auto_variant is set
+{ attr("variant_set", node(ID, Package), Variant, VariantValue)}
+  :- auto_variant(Variant, _ ),
+     condition_requirement(TriggerID, "variant_value", Package, Variant, VariantValue),
+     pkg_fact(Package, condition_trigger(ConditionID, TriggerID)),
+     requirement_group_member(ConditionID , Package, RequirementID),
+     activate_requirement(node(ID, Package), RequirementID).
+
 % suppress warnings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
 % warnings like 'info: atom does not occur in any rule head'.
