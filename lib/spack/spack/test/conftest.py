@@ -19,6 +19,7 @@ import stat
 import sys
 import tempfile
 import xml.etree.ElementTree
+from typing import List, Optional, Tuple
 
 import _vendoring.archspec.cpu
 import _vendoring.archspec.cpu.microarchitecture
@@ -59,10 +60,12 @@ import spack.spec
 import spack.stage
 import spack.store
 import spack.subprocess_context
+import spack.tengine
 import spack.util.executable
 import spack.util.file_cache
 import spack.util.git
 import spack.util.gpg
+import spack.util.naming
 import spack.util.parallel
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
@@ -76,6 +79,15 @@ from spack.util.pattern import Bunch
 from spack.util.remote_file_cache import raw_github_gitlab_url
 
 mirror_cmd = SpackCommand("mirror")
+
+
+@pytest.fixture(autouse=True)
+def clear_sys_modules():
+    """Clear package repos from sys.modules before each test."""
+    for key in list(sys.modules.keys()):
+        if key.startswith("spack_repo.") or key == "spack_repo":
+            del sys.modules[key]
+    yield
 
 
 @pytest.fixture(autouse=True)
@@ -664,10 +676,78 @@ def mutable_mock_repo(mock_packages_repo, request):
         yield mock_packages_repo
 
 
+class RepoBuilder:
+    """Build a mock repository in a directory"""
+
+    _counter = 0
+
+    def __init__(self, root_directory: str) -> None:
+        RepoBuilder._counter += 1
+        namespace = f"test_namespace_{RepoBuilder._counter}"
+        repo_root = os.path.join(root_directory, namespace)
+        os.makedirs(repo_root, exist_ok=True)
+        self.root, self.namespace = spack.repo.create_repo(repo_root, namespace)
+        self.build_system_name = f"test_build_system_{self.namespace}"
+        self._add_build_system()
+
+    def add_package(
+        self,
+        name: str,
+        dependencies: Optional[List[Tuple[str, Optional[str], Optional[str]]]] = None,
+    ) -> None:
+        """Create a mock package in the repository, using a Jinja2 template.
+
+        Args:
+            name: name of the new package
+            dependencies: list of ("dep_spec", "dep_type", "condition") tuples.
+                Both "dep_type" and "condition" can default to ``None`` in which case
+                ``spack.dependency.default_deptype`` and ``spack.spec.Spec()`` are used.
+        """
+        dependencies = dependencies or []
+        context = {
+            "cls_name": spack.util.naming.pkg_name_to_class_name(name),
+            "dependencies": dependencies,
+        }
+        template = spack.tengine.make_environment().get_template("mock-repository/package.pyt")
+        package_py = self._recipe_filename(name)
+        os.makedirs(os.path.dirname(package_py), exist_ok=True)
+        with open(package_py, "w", encoding="utf-8") as f:
+            f.write(template.render(context))
+
+    def remove(self, name: str) -> None:
+        package_py = self._recipe_filename(name)
+        shutil.rmtree(os.path.dirname(package_py))
+
+    def _add_build_system(self) -> None:
+        """Add spack_repo.<namespace>.build_systems.test_build_system with
+        build_system=test_build_system_<namespace>."""
+        template = spack.tengine.make_environment().get_template(
+            "mock-repository/build_system.pyt"
+        )
+        text = template.render({"build_system_name": self.build_system_name})
+        build_system_py = os.path.join(self.root, "build_systems", "test_build_system.py")
+        os.makedirs(os.path.dirname(build_system_py), exist_ok=True)
+        with open(build_system_py, "w", encoding="utf-8") as f:
+            f.write(text)
+
+    def _recipe_filename(self, name: str) -> str:
+        return os.path.join(
+            self.root,
+            "packages",
+            spack.util.naming.pkg_name_to_pkg_dir(name, package_api=(2, 0)),
+            "package.py",
+        )
+
+
+@pytest.fixture
+def repo_builder(tmp_path: pathlib.Path):
+    return RepoBuilder(str(tmp_path))
+
+
 @pytest.fixture()
 def mock_custom_repository(tmpdir, mutable_mock_repo):
     """Create a custom repository with a single package "c" and return its path."""
-    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("myrepo"))
+    builder = RepoBuilder(tmpdir.mkdir("myrepo"))
     builder.add_package("pkg-c")
     return builder.root
 

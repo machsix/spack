@@ -33,7 +33,7 @@ from spack.ci.generator_registry import generator
 from spack.cmd.ci import FAILED_CREATE_BUILDCACHE_CODE
 from spack.error import SpackError
 from spack.schema.database_index import schema as db_idx_schema
-from spack.test.conftest import MockHTTPResponse
+from spack.test.conftest import MockHTTPResponse, RepoBuilder
 
 config_cmd = spack.main.SpackCommand("config")
 ci_cmd = spack.main.SpackCommand("ci")
@@ -1101,7 +1101,9 @@ def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
     assert ci.stack_changed(fake_env_path) is True
 
 
-def test_ci_generate_prune_untouched(ci_generate_test, tmp_path, tmpdir, monkeypatch):
+def test_ci_generate_prune_untouched(
+    ci_generate_test, monkeypatch, tmp_path, repo_builder: RepoBuilder
+):
     """Test pipeline generation with pruning works to eliminate
     specs that were not affected by a change"""
     monkeypatch.setenv("SPACK_PRUNE_UNTOUCHED", "TRUE")  # enables pruning of untouched specs
@@ -1118,17 +1120,16 @@ def test_ci_generate_prune_untouched(ci_generate_test, tmp_path, tmpdir, monkeyp
     def fake_change_revisions(env_path):
         return "HEAD^", "HEAD"
 
-    builder = spack.repo.MockRepositoryBuilder(tmpdir)
-    builder.add_package("pkg-a", dependencies=[("pkg-b", None, None)])
-    builder.add_package("pkg-b", dependencies=[("pkg-c", None, None)])
-    builder.add_package("pkg-c")
-    builder.add_package("pkg-d")
+    repo_builder.add_package("pkg-a", dependencies=[("pkg-b", None, None)])
+    repo_builder.add_package("pkg-b", dependencies=[("pkg-c", None, None)])
+    repo_builder.add_package("pkg-c")
+    repo_builder.add_package("pkg-d")
 
     monkeypatch.setattr(ci, "compute_affected_packages", fake_compute_affected)
     monkeypatch.setattr(ci, "stack_changed", fake_stack_changed)
     monkeypatch.setattr(ci, "get_change_revisions", fake_change_revisions)
 
-    with spack.repo.use_repositories(builder.root, override=False):
+    with spack.repo.use_repositories(repo_builder.root, override=False):
         spack_yaml, outputfile, _ = ci_generate_test(
             f"""\
 spack:

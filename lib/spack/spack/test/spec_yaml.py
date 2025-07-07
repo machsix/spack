@@ -24,9 +24,11 @@ import spack.hash_types as ht
 import spack.paths
 import spack.repo
 import spack.spec
+import spack.test.conftest
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.spec import Spec, save_dependency_specfiles
+from spack.test.conftest import RepoBuilder
 from spack.util.spack_yaml import SpackYAMLError, syaml_dict
 
 
@@ -229,19 +231,18 @@ def check_specs_equal(original_spec, spec_yaml_path):
         return original_spec.eq_dag(spec_from_yaml)
 
 
-def test_save_dependency_spec_jsons_subset(tmpdir, config):
+def test_save_dependency_spec_jsons_subset(tmpdir, config, repo_builder: RepoBuilder):
     output_path = str(tmpdir.mkdir("spec_jsons"))
 
-    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock-repo"))
-    builder.add_package("pkg-g")
-    builder.add_package("pkg-f")
-    builder.add_package("pkg-e")
-    builder.add_package("pkg-d", dependencies=[("pkg-f", None, None), ("pkg-g", None, None)])
-    builder.add_package("pkg-c")
-    builder.add_package("pkg-b", dependencies=[("pkg-d", None, None), ("pkg-e", None, None)])
-    builder.add_package("pkg-a", dependencies=[("pkg-b", None, None), ("pkg-c", None, None)])
+    repo_builder.add_package("pkg-g")
+    repo_builder.add_package("pkg-f")
+    repo_builder.add_package("pkg-e")
+    repo_builder.add_package("pkg-d", dependencies=[("pkg-f", None, None), ("pkg-g", None, None)])
+    repo_builder.add_package("pkg-c")
+    repo_builder.add_package("pkg-b", dependencies=[("pkg-d", None, None), ("pkg-e", None, None)])
+    repo_builder.add_package("pkg-a", dependencies=[("pkg-b", None, None), ("pkg-c", None, None)])
 
-    with spack.repo.use_repositories(builder.root):
+    with spack.repo.use_repositories(repo_builder.root):
         spec_a = spack.concretize.concretize_one("pkg-a")
         b_spec = spec_a["pkg-b"]
         c_spec = spec_a["pkg-c"]
