@@ -47,13 +47,29 @@ or refer to the full manual below.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Basics
+   :caption: Introduction
 
    features
    getting_started
-   basic_usage
+   spec_syntax
+   installing_prerequisites
+   windows
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Basic Usage
+
+   package_fundamentals
+   configuring_compilers
    replace_conda_homebrew
    frequently_asked_questions
+   getting_help
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Advanced Topics
+
+   advanced_topics
 
 .. toctree::
    :maxdepth: 2
