@@ -36,6 +36,8 @@ import re
 import string
 from typing import List, Optional
 
+import spack.vendor.jinja2
+
 import spack.build_environment
 import spack.config
 import spack.deptypes as dt
@@ -871,12 +873,11 @@ class BaseModuleFileWriter:
 
         # Get the template for the module
         template_name = self._get_template()
-        import _vendoring.jinja2
 
         try:
             env = tengine.make_environment()
             template = env.get_template(template_name)
-        except _vendoring.jinja2.TemplateNotFound:
+        except spack.vendor.jinja2.TemplateNotFound:
             # If the template was not found raise an exception with a little
             # more information
             msg = "template '{0}' was not found for '{1}'"

@@ -45,7 +45,6 @@ os.environ["COLIFY_SIZE"] = "25x120"
 os.environ["COLUMNS"] = "120"
 
 sys.path[0:0] = [
-    os.path.abspath("_spack_root/lib/spack/external"),
     os.path.abspath("_spack_root/lib/spack/"),
     os.path.abspath(".spack/spack-packages/repos"),
 ]
@@ -82,6 +81,7 @@ sphinx_apidoc(
     + [
         "_spack_root/lib/spack/spack",
         "_spack_root/lib/spack/spack/package.py",  # sphinx struggles with os.chdir re-export.
+        "_spack_root/lib/spack/spack/vendor",
         "_spack_root/lib/spack/spack/test/*.py",
         "_spack_root/lib/spack/spack/test/cmd/*.py",
     ]
@@ -238,7 +238,7 @@ nitpick_ignore = [
     ("py:class", "spack.install_test.Pb"),
     ("py:class", "spack.filesystem_view.SimpleFilesystemView"),
     ("py:class", "spack.traverse.EdgeAndDepth"),
-    ("py:class", "_vendoring.archspec.cpu.microarchitecture.Microarchitecture"),
+    ("py:class", "spack.vendor.archspec.cpu.microarchitecture.Microarchitecture"),
     ("py:class", "spack.compiler.CompilerCache"),
     # TypeVar that is not handled correctly
     ("py:class", "spack.llnl.util.lang.T"),
