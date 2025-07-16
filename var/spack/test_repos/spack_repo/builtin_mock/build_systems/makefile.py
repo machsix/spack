@@ -12,13 +12,9 @@ import spack.spec
 import spack.util.prefix
 from spack.directives import build_system, conflicts, depends_on
 from spack.multimethod import when
+from spack.package import BuilderWithDefaults, apply_macos_rpath_fixups, execute_install_time_tests
 
-from ._checks import (
-    BuilderWithDefaults,
-    apply_macos_rpath_fixups,
-    execute_build_time_tests,
-    execute_install_time_tests,
-)
+from ._checks import execute_build_time_tests
 
 
 class MakefilePackage(spack.package_base.PackageBase):
@@ -28,7 +24,7 @@ class MakefilePackage(spack.package_base.PackageBase):
     #: system base class
     build_system_class = "MakefilePackage"
     #: Legacy buildsystem attribute used to deserialize and install old specs
-    legacy_buildsystem = "makefile"
+    default_buildsystem = "makefile"
 
     build_system("makefile")
 
@@ -70,10 +66,10 @@ class MakefileBuilder(BuilderWithDefaults):
     phases = ("edit", "build", "install")
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = ("check", "installcheck")
+    package_methods = ("check", "installcheck")
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes = (
+    package_attributes = (
         "build_targets",
         "install_targets",
         "build_time_test_callbacks",

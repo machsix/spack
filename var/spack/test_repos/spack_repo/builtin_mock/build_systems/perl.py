@@ -27,7 +27,7 @@ class PerlPackage(spack.package_base.PackageBase):
     #: system base class
     build_system_class = "PerlPackage"
     #: Legacy buildsystem attribute used to deserialize and install old specs
-    legacy_buildsystem = "perl"
+    default_buildsystem = "perl"
 
     build_system("perl")
 
@@ -111,10 +111,10 @@ class PerlBuilder(BuilderWithDefaults):
     phases = ("configure", "build", "install")
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = ("configure_args", "check", "test_use")
+    package_methods = ("configure_args", "check", "test_use")
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes = ()
+    package_attributes = ()
 
     #: Callback names for build-time test
     build_time_test_callbacks = ["check"]

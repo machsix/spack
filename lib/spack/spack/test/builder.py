@@ -184,3 +184,35 @@ def test_mixins_with_builders(working_env):
 
     # Check that callback from the GenericBuilder are in the list too
     assert any(fn.__name__ == "sanity_check_prefix" for _, fn in builder.run_after_callbacks)
+
+
+def test_reading_api_v20_attributes():
+    """Tests that we can read attributes from API v2.0 builders."""
+
+    class TestBuilder(spack.builder.Builder):
+        legacy_methods = ("configure", "install")
+        legacy_attributes = ("foo", "bar")
+        legacy_long_methods = ("baz", "fee")
+
+    methods = spack.builder.package_methods(TestBuilder)
+    assert methods == ("configure", "install")
+    attributes = spack.builder.package_attributes(TestBuilder)
+    assert attributes == ("foo", "bar")
+    long_methods = spack.builder.package_long_methods(TestBuilder)
+    assert long_methods == ("baz", "fee")
+
+
+def test_reading_api_v22_attributes():
+    """Tests that we can read attributes from API v2.2 builders."""
+
+    class TestBuilder(spack.builder.Builder):
+        package_methods = ("configure", "install")
+        package_attributes = ("foo", "bar")
+        package_long_methods = ("baz", "fee")
+
+    methods = spack.builder.package_methods(TestBuilder)
+    assert methods == ("configure", "install")
+    attributes = spack.builder.package_attributes(TestBuilder)
+    assert attributes == ("foo", "bar")
+    long_methods = spack.builder.package_long_methods(TestBuilder)
+    assert long_methods == ("baz", "fee")
