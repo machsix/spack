@@ -973,9 +973,10 @@ def _parse_package_api_version(
     min_str = ".".join(str(i) for i in min_api)
     max_str = ".".join(str(i) for i in max_api)
     curr_str = ".".join(str(i) for i in package_api)
-    raise BadRepoError(
+    raise BadRepoVersionError(
+        api,
         f"Package API v{curr_str} is not supported by this version of Spack ("
-        f"must be between v{min_str} and v{max_str})"
+        f"must be between v{min_str} and v{max_str})",
     )
 
 
@@ -1663,12 +1664,21 @@ class RemoteRepoDescriptor(RepoDescriptor):
             return self._fetched()
         return False
 
+    def get_commit(self, git: MaybeExecutable = None):
+        git = git or spack.util.git.git(required=True)
+        with self.read_transaction:
+            if not self._fetched():
+                return None
+
+            with fs.working_dir(self.destination):
+                return git("rev-parse", "HEAD", output=str).strip()
+
     def _clone_or_pull(
         self,
         git: spack.util.executable.Executable,
         update: bool = False,
         remote: str = "origin",
-        depth: int = 20,
+        depth: Optional[int] = None,
     ) -> None:
         with self.write_transaction:
             try:
@@ -1679,6 +1689,16 @@ class RemoteRepoDescriptor(RepoDescriptor):
                     if fetched and not update:
                         self.read_index_file()
                         return
+
+                    # If depth is not provided, default to:
+                    # 1. The first time the repo is loaded, download a partial clone.
+                    #     This speeds  up CI/CD and other cases where the user never
+                    #     updates the repository.
+                    # 2. When *updating* an already cloned copy of the repository,
+                    #    perform a full fetch (unshallowing the repo if necessary) to
+                    #    optimize for full history.
+                    if depth is None and not fetched:
+                        depth = 2
 
                     # setup the repository if it does not exist
                     if not fetched:
@@ -1701,7 +1721,9 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         spack.util.git.pull_checkout_commit(self.commit, git_exe=git)
 
                     elif self.tag:
-                        spack.util.git.pull_checkout_tag(self.tag, remote, depth, git_exe=git)
+                        spack.util.git.pull_checkout_tag(
+                            self.tag, remote, depth=depth, git_exe=git
+                        )
 
                     elif self.branch:
                         # if the branch already exists we should use the
@@ -2031,6 +2053,14 @@ class InvalidNamespaceError(RepoError):
 
 class BadRepoError(RepoError):
     """Raised when repo layout is invalid."""
+
+
+class BadRepoVersionError(BadRepoError):
+    """Raised when repo API version is too high or too low for Spack."""
+
+    def __init__(self, api, *args, **kwargs):
+        self.api = api
+        super().__init__(*args, **kwargs)
 
 
 class UnknownEntityError(RepoError):

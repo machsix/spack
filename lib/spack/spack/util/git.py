@@ -63,27 +63,45 @@ def pull_checkout_commit(commit: str, git_exe: Optional[exe.Executable] = None):
     """Fetch all remotes and checkout the specified commit."""
     git_exe = git_exe or git(required=True)
 
-    git_exe("fetch", "--all")
+    git_exe("fetch", "--quiet", "--progress", "--all")
     git_exe("checkout", commit)
 
 
 def pull_checkout_tag(
-    tag: str, remote: str = "origin", depth: int = 20, git_exe: Optional[exe.Executable] = None
+    tag: str,
+    remote: str = "origin",
+    depth: Optional[int] = None,
+    git_exe: Optional[exe.Executable] = None,
 ):
     """Fetch tags with specified depth and checkout the given tag."""
     git_exe = git_exe or git(required=True)
 
-    git_exe("fetch", f"--depth={depth}", "--force", "--tags", remote)
+    fetch_args = ["--quiet", "--progress", "--tags"]
+    if depth is not None:
+        if depth <= 0:
+            raise ValueError("depth must be a positive integer")
+        fetch_args.append(f"--depth={depth}")
+
+    git_exe("fetch", *fetch_args, remote)
     git_exe("checkout", tag)
 
 
 def pull_checkout_branch(
-    branch: str, remote: str = "origin", depth: int = 20, git_exe: Optional[exe.Executable] = None
+    branch: str,
+    remote: str = "origin",
+    depth: Optional[int] = None,
+    git_exe: Optional[exe.Executable] = None,
 ):
     """Fetch and checkout branch, then rebase with remote tracking branch."""
     git_exe = git_exe or git(required=True)
 
-    git_exe("fetch", f"--depth={depth}", remote, branch)
+    fetch_args = ["--quiet", "--progress"]
+    if depth:
+        if depth <= 0:
+            raise ValueError("depth must be a positive integer")
+        fetch_args.append(f"--depth={depth}")
+
+    git_exe("fetch", *fetch_args, remote, branch)
     git_exe("checkout", "--quiet", branch)
 
     try:
