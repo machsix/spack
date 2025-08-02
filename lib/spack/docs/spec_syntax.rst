@@ -36,11 +36,11 @@ The figure below helps getting a sense of the various parts that compose this sp
 
 If used to install a package, this will install:
 
- * The ``mpileaks`` library at some version between ``1.2`` and ``1.4`` (inclusive),
- * with ``debug`` options enabled, and without ``qt`` support,
- * for an ``x86_64_v3`` architecture,
- * built using ``gcc`` at version ``15.1.0``,
- * depending on ``libelf`` at version ``1.1``, built with ``gcc`` at version ``14.2.0``.
+* The ``mpileaks`` library at some version between ``1.2`` and ``1.4`` (inclusive),
+* with ``debug`` options enabled, and without ``qt`` support,
+* for an ``x86_64_v3`` architecture,
+* built using ``gcc`` at version ``15.1.0``,
+* depending on ``libelf`` at version ``1.1``, built with ``gcc`` at version ``14.2.0``.
 
 Most specs will not be as complicated as this one, but this is a good example of what is possible with specs.
 There are a few general rules that we can already infer from this first example:
@@ -136,7 +136,6 @@ So in the spec:
 
 .. admonition:: Windows Spec Syntax Caveats
    :class: note
-   :collapsible:
 
    Windows has a few idiosyncrasies when it comes to the Spack spec syntax and the use of certain shells.
    Spack's spec dependency syntax uses the carat (``^``) character; however, this is an escape string in CMD,
@@ -216,13 +215,13 @@ reference provided. Acceptable syntaxes for this are:
 
 .. code-block:: sh
 
-    # commit hashes
-   foo@abcdef1234abcdef1234abcdef1234abcdef1234    # 40 character hashes are automatically treated as git commits
+   # commit hashes
+   foo@abcdef1234abcdef1234abcdef1234abcdef1234  # 40 character hashes are automatically treated as git commits
    foo@git.abcdef1234abcdef1234abcdef1234abcdef1234
 
-    # branches and tags
-   foo@git.develop # use the develop branch
-   foo@git.0.19 # use the 0.19 tag
+   # branches and tags
+   foo@git.develop  # use the develop branch
+   foo@git.0.19  # use the 0.19 tag
 
 Spack always needs to associate a Spack version with the git reference,
 which is used for version comparison. This Spack version is heuristically
@@ -321,7 +320,6 @@ syntax should be used with the ``:=`` operator.
 
 .. admonition:: Alternative ways to deactivate Boolean Variants
    :class: note
-   :collapsible:
 
    In certain shells, the ``~`` character expands to the home directory.
    To avoid these issues, avoid whitespace between the package name and the variant:
