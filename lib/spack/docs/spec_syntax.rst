@@ -159,7 +159,7 @@ A version specifier
 
 .. code-block:: spec
 
-   pkg@<specifier>
+   pkg@specifier
 
 comes after a package name and starts with ``@``.
 It can be something abstract that matches multiple known versions or a specific version.
@@ -692,7 +692,7 @@ Users can select which virtuals to use from which dependency by specifying the `
 
 .. code-block:: spec
 
-   spack install mpich %[virtuals=c,cxx] clang %[virtuals=fortran] gcc
+   $ spack install mpich %[virtuals=c,cxx] clang %[virtuals=fortran] gcc
 
 The command above tells Spack to use ``clang`` to provide the ``c`` and ``cxx`` virtuals, and ``gcc`` to provide the ``fortran`` virtual.
 
@@ -701,7 +701,7 @@ For instance, an equivalent formulation of the command above is:
 
 .. code-block:: spec
 
-   spack install mpich %c,cxx=clang %fortran=gcc
+   $ spack install mpich %c,cxx=clang %fortran=gcc
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -713,6 +713,6 @@ We can express conditional constraint by specifying the ``when`` edge attribute:
 
 .. code-block:: spec
 
-   spack install hdf5 ^[when=+mpi] mpich@3.1
+   $ spack install hdf5 ^[when=+mpi] mpich@3.1
 
 This tells Spack that hdf5 should depend on ``mpich@3.1`` if it is configured with MPI support.

@@ -25,7 +25,7 @@ from typing import List
 from docutils.statemachine import StringList
 
 # ... other imports at the top of the file
-from pygments.lexer import RegexLexer
+from pygments.lexer import RegexLexer, default
 from pygments.token import *
 from sphinx.domains.python import PythonDomain
 from sphinx.ext.apidoc import main as sphinx_apidoc
@@ -104,50 +104,68 @@ from spack.spec_parser import SpecTokens
 
 
 class SpecLexer(RegexLexer):
-    """A custom lexer for Spack spec strings."""
+    """A custom lexer for Spack spec strings and spack commands."""
 
     name = "Spack spec"
     aliases = ["spec"]
     filenames = []
     tokens = {
         "root": [
-            # Command line / spack command prefix
-            (r"^(\s*\$?\s*spack\s+(?:[a-zA-Z0-9-]+\s+)?)", Text),
-            # Text from command line output
-            (r"^[A-Z].*$", Text),
-            # -- and ==> prefixes from command line output
-            (r"^[-=]+.*$", Text),
+            # Looks for `$ command`, which may need spec highlighting.
+            (r"^\$\s+", Generic.Prompt, "command"),
+            (r"#.*?\n", Comment.Single),
+            # Alternatively, we just get a literal spec string, so we move to spec mode. We just
+            # look ahead here, without consuming the spec string.
+            (r"(?=\S+)", Generic.Prompt, "spec"),
+        ],
+        "command": [
+            # A spack install command is followed by a spec string, which we highlight.
+            (
+                r"spack(?:\s+(?:-[eC]\s+\S+|--?\S+))*\s+(?:install|uninstall|spec|load|unload|find|info|list|versions|providers|mark|diff|add)(?: +(?:--?\S+)?)*",
+                Text,
+                "spec",
+            ),
             # Comment
-            (r"#.*$", Comment.Single),
-            # Probably a command line flag, not a variant.
-            (r"--[a-zA-Z0-9-]+", Text),
+            (r"\s+#.*?\n", Comment.Single, "command_output"),
+            # Escaped newline should leave us in this mode
+            (r".*?\\\n", Text),
+            # Otherwise, it's the end of the command
+            (r".*?\n", Text, "command_output"),
+        ],
+        "command_output": [
+            (r"^\$\s+", Generic.Prompt, "#pop"),  # new command
+            (r"#.*?\n", Comment.Single),  # comments
+            (r".*?\n", Generic.Output),  # command output
+        ],
+        "spec": [
+            # New line terminates the spec string
+            (r"\s*?$", Text, "#pop"),
             # Dependency, with optional virtual assignment specifier
-            (SpecTokens.START_EDGE_PROPERTIES.regex, String, "edge_properties"),
-            (SpecTokens.DEPENDENCY.regex, String),
+            (SpecTokens.START_EDGE_PROPERTIES.regex, Name.Variable, "edge_properties"),
+            (SpecTokens.DEPENDENCY.regex, Name.Variable),
             # versions
-            (SpecTokens.GIT_VERSION.regex, Keyword.Constant),
-            (SpecTokens.VERSION.regex, Keyword.Constant),
-            (SpecTokens.VERSION_HASH_PAIR.regex, Keyword.Constant),
+            (SpecTokens.VERSION_HASH_PAIR.regex, Keyword.Pseudo),
+            (SpecTokens.GIT_VERSION.regex, Keyword.Pseudo),
+            (SpecTokens.VERSION.regex, Keyword.Pseudo),
             # variants
-            (SpecTokens.PROPAGATED_BOOL_VARIANT.regex, Name.Class),
-            (SpecTokens.BOOL_VARIANT.regex, Name.Class),
-            (SpecTokens.PROPAGATED_KEY_VALUE_PAIR.regex, Name.Class),
-            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Class),
+            (SpecTokens.PROPAGATED_BOOL_VARIANT.regex, Name.Function),
+            (SpecTokens.BOOL_VARIANT.regex, Name.Function),
+            (SpecTokens.PROPAGATED_KEY_VALUE_PAIR.regex, Name.Function),
+            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Function),
             # filename
-            (SpecTokens.FILENAME.regex, String),
+            (SpecTokens.FILENAME.regex, Text),
             # Package name
-            (SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME.regex, String),
-            (SpecTokens.UNQUALIFIED_PACKAGE_NAME.regex, String),
+            (SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME.regex, Name.Class),
+            (SpecTokens.UNQUALIFIED_PACKAGE_NAME.regex, Name.Class),
             # DAG hash
-            (SpecTokens.DAG_HASH.regex, String),
-            # White spaces
-            (SpecTokens.WS.regex, Whitespace),
-            # Unexpected character(s)
-            (r".", Text),
+            (SpecTokens.DAG_HASH.regex, Text),
+            (SpecTokens.WS.regex, Text),
+            # Also stop at unrecognized tokens (without consuming them)
+            default("#pop"),
         ],
         "edge_properties": [
-            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Class),
-            (SpecTokens.END_EDGE_PROPERTIES.regex, String, "root"),
+            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Function),
+            (SpecTokens.END_EDGE_PROPERTIES.regex, Name.Variable, "#pop"),
         ],
     }
 
@@ -392,6 +410,8 @@ html_static_path = ["_static"]
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 html_last_updated_fmt = "%b %d, %Y"
+pygments_style = "default"
+pygments_dark_style = "monokai"
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
