@@ -9,7 +9,6 @@
 
 .. _signing:
 
-=====================
 Spack Package Signing
 =====================
 
@@ -27,7 +26,6 @@ interested users.
 
 .. _risks:
 
-------------------------------
 Risks, Impact and Threat Model
 ------------------------------
 
@@ -56,7 +54,6 @@ leak the key by accident.
 
 .. _overview:
 
------------------
 Pipeline Overview
 -----------------
 
@@ -94,7 +91,6 @@ pipelines.
 
 .. _key_architecture:
 
-----------------
 Key Architecture
 ----------------
 
@@ -108,7 +104,6 @@ so for the purpose of this explanation we will refer to Root and Signing keys.
 Each key has a private and a public component as well as one or more identities
 and zero or more signatures.
 
--------------------
 Intermediate CI Key
 -------------------
 
@@ -124,7 +119,7 @@ signed by the Signing Intermediate CI Private Key.
 +---------------------------------------------------------------------------------------------------------+
 | **Intermediate CI Key (GPG)**                                                                           |
 +==================================================+======================================================+
-| Root Intermediate CI Private Key (RSA 4096)#     |     Root Intermediate CI Public Key (RSA 4096)       |
+| Root Intermediate CI Private Key (RSA 4096)      |     Root Intermediate CI Public Key (RSA 4096)       |
 +--------------------------------------------------+------------------------------------------------------+
 |   Signing Intermediate CI Private Key (RSA 4096) |        Signing Intermediate CI Public Key (RSA 4096) |
 +--------------------------------------------------+------------------------------------------------------+
@@ -141,7 +136,6 @@ issue new sub-keys for use in the pipeline. It is our expectation that this
 will happen on a semi-regular basis. A corollary of this is that *this key
 should not be used to verify package integrity outside the internal CI process.*
 
-----------------
 Reputational Key
 ----------------
 
@@ -183,7 +177,6 @@ Infrastructure.
 
 .. _build_cache_signing:
 
--------------------
 Build Cache Signing
 -------------------
 
@@ -250,7 +243,6 @@ force installation of a signed package without verification by providing the
 
 .. _internal_implementation:
 
------------------------
 Internal Implementation
 -----------------------
 
@@ -275,8 +267,8 @@ infrastructure.
     - Both Root private keys are protected with strong passwords
     - Who has access to these and how?
 
-**Intermediate CI Key**
------------------------
+Intermediate CI Key
+^^^^^^^^^^^^^^^^^^^
 
 Multiple intermediate CI signing keys exist, one Intermediate CI Key for jobs
 run in AWS, and one key for each affiliated institution (e.g. University of
@@ -311,8 +303,8 @@ the following way:
 6. The spec manifest is signed by the keyring and uploaded to the mirror's
    build cache.
 
-**Reputational Key**
---------------------
+Reputational Key
+^^^^^^^^^^^^^^^^
 
 Because of the increased impact to end users in the case of a private
 key breach, the Reputational Key is managed separately from the
