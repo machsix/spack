@@ -64,12 +64,12 @@ or another), then we say it is **abstract**.
 
 Spack's job is to take an *abstract* spec from the user, find a
 *concrete* spec that satisfies the constraints, and hand the task of
-building the software off to the package object. 
+building the software off to the package object.
 
 Packages are managed through Spack's **package repositories**, which allow
 packages to be stored in multiple repositories with different namespaces.
-The built-in packages are hosted in a separate Git repository and 
-automatically managed by Spack, while custom repositories can be added 
+The built-in packages are hosted in a separate Git repository and
+automatically managed by Spack, while custom repositories can be added
 for organization-specific or experimental packages.
 
 The rest of this document describes all the pieces that come together to make that
@@ -128,7 +128,7 @@ parts of Spack live in ``lib/spack``.
 
 .. note::
 
-   **Package Repositories**: Built-in packages are hosted 
+   **Package Repositories**: Built-in packages are hosted
    in a separate Git repository at `spack/spack-packages <https://github.com/spack/spack-packages>`_
    and are automatically cloned to ``~/.spack/package_repos/`` when needed.
    The ``var/spack/test_repos/`` directory is used for unit tests only.
@@ -266,9 +266,9 @@ Understanding this system is important for developing Spack itself.
   The core module for managing package repositories. Contains the ``Repo`` and ``RepoPath``
   classes that handle loading and searching packages from multiple repositories.
 
-Built-in packages are stored in a separate Git repository (`spack/spack-packages 
-<https://github.com/spack/spack-packages>`_) rather than being included directly in 
-the Spack source tree. This repository is automatically cloned to ``~/.spack/package_repos/`` 
+Built-in packages are stored in a separate Git repository (`spack/spack-packages
+<https://github.com/spack/spack-packages>`_) rather than being included directly in
+the Spack source tree. This repository is automatically cloned to ``~/.spack/package_repos/``
 when needed.
 
 Key concepts:
@@ -612,8 +612,8 @@ just like you would with the normal Python command.
 ^^^^^^^^^^^^^^^
 
 ``spack blame`` is a way to quickly see contributors to packages or files
-in Spack's source tree. For built-in packages, this shows contributors to the package 
-files in the separate ``spack/spack-packages`` repository. You should provide a target 
+in Spack's source tree. For built-in packages, this shows contributors to the package
+files in the separate ``spack/spack-packages`` repository. You should provide a target
 package name or file name to the command. Here is an example asking to see contributions
 for the package "python":
 
@@ -744,30 +744,30 @@ least provides some insight into how the Spack project works.
 Release branches
 ^^^^^^^^^^^^^^^^
 
-There are currently two types of Spack releases: :ref:`major releases
-<major-releases>` (``0.21.0``, ``0.22.0``, etc.) and :ref:`patch releases
-<patch-releases>` (``0.22.1``, ``0.22.2``, ``0.22.3``, etc.). Here is a
+There are currently two types of Spack releases: :ref:`minor releases
+<minor-releases>` (``1.1.0``, ``1.2.0``, etc.) and :ref:`patch releases
+<patch-releases>` (``1.1.1``, ``1.1.2``, ``1.1.3``, etc.). Here is a
 diagram of how Spack release branches work:
 
 .. code-block:: text
 
-   o    branch: develop  (latest version, v0.23.0.dev0)
+   o    branch: develop  (latest version, v1.2.0.dev0)
    |
    o
-   | o  branch: releases/v0.22, tag: v0.22.1
+   | o  branch: releases/v1.1, tag: v1.1.1
    o |
-   | o  tag: v0.22.0
+   | o  tag: v1.1.0
    o |
    | o
    |/
    o
    |
    o
-   | o  branch: releases/v0.21, tag: v0.21.2
+   | o  branch: releases/v1.0, tag: v1.0.2
    o |
-   | o  tag: v0.21.1
+   | o  tag: v1.0.1
    o |
-   | o  tag: v0.21.0
+   | o  tag: v1.0.0
    o |
    | o
    |/
@@ -775,22 +775,22 @@ diagram of how Spack release branches work:
 
 The ``develop`` branch has the latest contributions, and nearly all pull
 requests target ``develop``. The ``develop`` branch will report that its
-version is that of the next **major** release with a ``.dev0`` suffix.
+version is that of the next **minor** release with a ``.dev0`` suffix.
 
 Each Spack release series also has a corresponding branch, e.g.,
-``releases/v0.22`` has ``v0.22.x`` versions of Spack, and
-``releases/v0.21`` has ``v0.21.x`` versions. A major release is the first
-tagged version on a release branch. Minor releases are back-ported from
+``releases/v1.1`` has ``v1.1.x`` versions of Spack, and
+``releases/v1.0`` has ``v1.0.x`` versions. A minor release is the first
+tagged version on a release branch. Patch releases are back-ported from
 develop onto release branches. This is typically done by cherry-picking
 bugfix commits off of ``develop``.
 
-To avoid version churn for users of a release series, minor releases
+To avoid version churn for users of a release series, patch releases
 **should not** make changes that would change the concretization of
 packages. They should generally only contain fixes to the Spack core.
 However, sometimes priorities are such that new functionality needs to
-be added to a minor release.
+be added to a patch release.
 
-Both major and minor releases are tagged. As a convenience, we also tag
+Both minor and patch releases are tagged. As a convenience, we also tag
 the latest release as ``releases/latest``, so that users can easily check
 it out to get the latest stable version. See :ref:`updating-latest-release`
 for more details.
@@ -808,15 +808,15 @@ for more details.
 Scheduling work for releases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We schedule work for **major releases** through `milestones
+We schedule work for **minor releases** through `milestones
 <https://github.com/spack/spack/milestones>`_ and `GitHub Projects
 <https://github.com/spack/spack/projects>`_, while **patch releases** use `labels
 <https://github.com/spack/spack/labels>`_.
 
-There is only one milestone open at a time. Its name corresponds to the next major version, for
-example ``v0.23``. Important issues and pull requests should be assigned to this milestone by
+There is only one milestone open at a time. Its name corresponds to the next major/minor version, for
+example ``v1.1.0``. Important issues and pull requests should be assigned to this milestone by
 core developers, so that they are not forgotten at the time of release. The milestone is closed
-when the release is made, and a new milestone is created for the next major release.
+when the release is made, and a new milestone is created for the next major/minor release.
 
 Bug reports in GitHub issues are automatically labelled ``bug`` and ``triage``. Spack developers
 assign one of the labels ``impact-low``, ``impact-medium`` or ``impact-high``. This will make the
@@ -825,7 +825,7 @@ Important issues should be assigned to the next milestone as well, so they appea
 the project board.
 
 Spack's milestones are not firm commitments so we move work between releases frequently. If we
-need to make a release and some tasks are not yet done, we will simply move them to the next major
+need to make a release and some tasks are not yet done, we will simply move them to the next minor
 release milestone, rather than delaying the release to complete them.
 
 Backporting bug fixes
@@ -834,7 +834,7 @@ Backporting bug fixes
 When a bug is fixed in the ``develop`` branch, it is often necessary to backport the fix to one
 (or more) of the ``releases/vX.Y`` branches. Only the release manager is responsible for doing
 backports, but Spack maintainers are responsible for labelling pull requests (and issues if no bug
-fix is available yet) with ``vX.Y.Z`` labels. The label should correspond to the next patch version
+fix is available yet) with ``vX.Y.Z`` labels. The labels should correspond to the future patch versions
 that the bug fix should be backported to.
 
 Backports are done publicly by the release manager using a pull request named ``Backports vX.Y.Z``.
@@ -842,15 +842,15 @@ This pull request is opened from the ``backports/vX.Y.Z`` branch, targets the ``
 branch and contains a (growing) list of cherry-picked commits from the ``develop`` branch.
 Typically there are one or two backport pull requests open at any given time.
 
-.. _major-releases:
+.. _minor-releases:
 
-Making major releases
+Making minor releases
 ^^^^^^^^^^^^^^^^^^^^^
 
-Assuming all required work from the milestone is completed, the steps to make the major release
+Assuming all required work from the milestone is completed, the steps to make the minor release
 are:
 
-#. `Create a new milestone <https://github.com/spack/spack/milestones>`_ for the next major
+#. `Create a new milestone <https://github.com/spack/spack/milestones>`_ for the next major/minor
    release.
 
 #. `Create a new label <https://github.com/spack/spack/labels>`_ for the next patch release.
@@ -861,7 +861,7 @@ are:
 
    .. code-block:: console
 
-      $ git checkout -b releases/v0.23 develop
+      $ git checkout -b releases/v1.1 develop
 
    For a version ``vX.Y.Z``, the branch's name should be
    ``releases/vX.Y``. That is, you should create a ``releases/vX.Y``
@@ -893,12 +893,12 @@ are:
    is outdated, submit pull requests to ``develop`` as normal
    and keep rebasing the release branch on ``develop``.
 
-#. Bump the major version in the ``develop`` branch.
+#. Bump the minor version in the ``develop`` branch.
 
-   Create a pull request targeting the ``develop`` branch, bumping the major
+   Create a pull request targeting the ``develop`` branch, bumping the minor
    version in ``lib/spack/spack/__init__.py`` with a ``dev0`` release segment.
-   For instance, when you have just released ``v0.23.0``, set the version
-   to ``(0, 24, 0, 'dev0')`` on ``develop``.
+   For instance, when you have just released ``v1.1.0``, set the version
+   to ``(1, 2, 0, 'dev0')`` on ``develop``.
 
 #. Follow the steps in :ref:`publishing-releases`.
 
@@ -1000,11 +1000,11 @@ Publishing a release on GitHub
    * Set ``Tag version`` to the name of the tag that will be created.
 
      The name should start with ``v`` and contain *all three*
-     parts of the version (e.g., ``v0.15.0`` or ``v0.15.1``).
+     parts of the version (e.g., ``v1.1.0`` or ``v1.1.1``).
 
-   * Set ``Target`` to the ``releases/vX.Y`` branch (e.g., ``releases/v0.15``).
+   * Set ``Target`` to the ``releases/vX.Y`` branch (e.g., ``releases/v1.0``).
 
-   * Set ``Release title`` to ``vX.Y.Z`` to match the tag (e.g., ``v0.15.1``).
+   * Set ``Release title`` to ``vX.Y.Z`` to match the tag (e.g., ``v1.0.1``).
 
    * Paste the latest release Markdown from your ``CHANGELOG.md`` file as the text.
 
@@ -1048,20 +1048,20 @@ Updating `releases/latest`
 
 If the new release is the **highest** Spack release yet, you should
 also tag it as ``releases/latest``. For example, suppose the highest
-release is currently ``v0.22.3``:
+release is currently ``v1.0.3``:
 
-* If you are releasing ``v0.22.4`` or ``v0.23.0``, then you should tag
-  it with ``releases/latest``, as these are higher than ``v0.22.3``.
+* If you are releasing ``v1.0.4`` or ``v1.1.0``, then you should tag
+  it with ``releases/latest``, as these are higher than ``v1.0.3``.
 
-* If you are making a new release of an **older** major version of
-  Spack, e.g., ``v0.21.4``, then you should not tag it as
-  ``releases/latest`` (as there are newer major versions).
+* If you are making a new release of an **older** minor version of
+  Spack, e.g., ``v1.0.4``, then you should not tag it as
+  ``releases/latest`` (as there are newer major/minor versions).
 
 To do so, first fetch the latest tag created on GitHub, since you may not have it locally:
 
 .. code-block:: console
 
-   $ git fetch --force git@github.com:spack/spack vX.Y.Z
+   $ git fetch --force git@github.com:spack/spack tag vX.Y.Z
 
 Then tag ``vX.Y.Z`` as ``releases/latest`` and push the individual tag to GitHub.
 
@@ -1096,7 +1096,7 @@ X, Slack, and the mailing list. Here are the steps:
 
 #. Announce the release on Slack.
 
-   * Compose a message in the ``#general`` Slack channel
+   * Compose a message in the ``#announcements`` Slack channel
      (`spackpm.slack.com <https://spackpm.slack.com>`_).
 
    * Preface the message with ``@channel`` to notify even those
