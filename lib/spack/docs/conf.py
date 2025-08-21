@@ -263,7 +263,6 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
-    "sphinx_design",
     "sphinxcontrib.programoutput",
 ]
 
