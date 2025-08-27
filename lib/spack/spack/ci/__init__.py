@@ -95,13 +95,13 @@ def get_change_revisions(path: str) -> Tuple[Optional[str], Optional[str]]:
 def filter_added_checksums(
     checksums: Iterable[str], path: str, from_ref: str = "HEAD~1", to_ref: str = "HEAD"
 ) -> List[str]:
-    """Get a list of the version checksums added between `from_ref` and `to_ref`.
+    """Get a list of the version checksums added between ``from_ref`` and ```to_ref``.
 
     Args:
        checksums: an iterable of checksums to look for in the diff
        path: path to the package.py
-       from_ref: oldest git ref, defaults to `HEAD~1`
-       to_ref: newer git ref, defaults to `HEAD`
+       from_ref: oldest git ref, defaults to ``HEAD~1``
+       to_ref: newer git ref, defaults to ``HEAD``
     Returns: list of version checksums added between refs
     """
     git_exe = spack.util.git.git(required=True)
@@ -132,7 +132,7 @@ def filter_added_checksums(
 def stack_changed(env_path: str) -> bool:
     """Given an environment manifest path, return whether or not the stack was changed.
     Returns True iff the environment manifest changed between the provided revisions (or
-    additionally if the `.gitlab-ci.yml` file itself changed)."""
+    additionally if the ``.gitlab-ci.yml`` file itself changed)."""
     # git returns posix paths always, normalize input to be compatible with that
     env_path = spack.llnl.path.convert_to_posix_path(os.path.dirname(env_path))
 
@@ -701,17 +701,15 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
     )
 
 
-def download_and_extract_artifacts(url, work_dir) -> str:
+def download_and_extract_artifacts(url: str, work_dir: str) -> str:
     """Look for gitlab artifacts.zip at the given url, and attempt to download
-        and extract the contents into the given work_dir
+    and extract the contents into the given work_dir
 
     Arguments:
-
-        url (str): Complete url to artifacts.zip file
-        work_dir (str): Path to destination where artifacts should be extracted
+        url: Complete url to artifacts.zip file
+        work_dir: Path to destination where artifacts should be extracted
 
     Output:
-
         Artifacts root path relative to the archive root
     """
     tty.msg(f"Fetching artifacts from: {url}")

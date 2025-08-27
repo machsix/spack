@@ -108,7 +108,7 @@ class WindowsRPath:
 
         This method should be overridden by packages that produce
         binaries/libraries/python extension modules/etc that are installed into
-        directories outside a package's `bin`, `lib`, and `lib64` directories,
+        directories outside a package's ``bin``, ``lib``, and ``lib64`` directories,
         but still require linking against one of the packages dependencies, or
         other components of the package itself. No-op otherwise.
 
@@ -565,12 +565,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     .. code-block:: python
 
-       p = Package()             # Done for you by spack
+       p = Package()  # Done for you by spack
 
-       p.do_fetch()              # downloads tarball from a URL (or VCS)
-       p.do_stage()              # expands tarball in a temp directory
-       p.do_patch()              # applies patches to expanded source
-       p.do_uninstall()          # removes install directory
+       p.do_fetch()  # downloads tarball from a URL (or VCS)
+       p.do_stage()  # expands tarball in a temp directory
+       p.do_patch()  # applies patches to expanded source
+       p.do_uninstall()  # removes install directory
 
     although packages that do not have code have nothing to fetch so omit
     ``p.do_fetch()``.
@@ -579,9 +579,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     .. code-block:: python
 
-       p.do_clean()              # removes the stage directory entirely
-       p.do_restage()            # removes the build directory and
-                                 # re-expands the archive.
+       p.do_clean()  # removes the stage directory entirely
+       p.do_restage()  # removes the build directory and re-expands the archive.
 
     The convention used here is that a ``do_*`` function is intended to be
     called internally by Spack commands (in ``spack.cmd``).  These aren't for
@@ -632,7 +631,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: Class level dictionary populated by :func:`~spack.directives.redistribute` directives
     disable_redistribute: Dict[spack.spec.Spec, DisableRedistribute]
 
-    #: Must be defined as a fallback for old specs that don't have the `build_system` variant
+    #: Must be defined as a fallback for old specs that don't have the ``build_system`` variant
     default_buildsystem: str
 
     #: Use :attr:`~spack.package_base.PackageBase.default_buildsystem` instead of this attribute,
@@ -742,7 +741,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     maintainers: List[str] = []
 
     #: Set to ``True`` to indicate the stand-alone test requires a compiler.
-    #: It is used to ensure a compiler and build dependencies like 'cmake'
+    #: It is used to ensure a compiler and build dependencies like ``cmake``
     #: are available to build a custom test code.
     test_requires_compiler: bool = False
 

@@ -5,12 +5,11 @@
 
 The database serves two purposes:
 
-  1. It implements a cache on top of a potentially very large Spack
-     directory hierarchy, speeding up many operations that would
-     otherwise require filesystem access.
-
-  2. It will allow us to track external installations as well as lost
-     packages and their dependencies.
+1. It implements a cache on top of a potentially very large Spack
+   directory hierarchy, speeding up many operations that would
+   otherwise require filesystem access.
+2. It will allow us to track external installations as well as lost
+   packages and their dependencies.
 
 Prior to the implementation of this store, a directory layout served
 as the authoritative database of packages in Spack.  This module
@@ -178,8 +177,8 @@ class InstallRecord:
     install path, AND whether or not it is installed.  We need the
     installed flag in case a user either:
 
-        a) blew away a directory, or
-        b) used spack uninstall -f to get rid of it
+    1. blew away a directory, or
+    2. used spack uninstall -f to get rid of it
 
     If, in either case, the package was removed but others still
     depend on it, we still need to track its spec, so we don't
@@ -443,7 +442,7 @@ class FailureTracker:
     def clear(self, spec: "spack.spec.Spec", force: bool = False) -> None:
         """Removes any persistent and cached failure tracking for the spec.
 
-        see `mark()`.
+        see :meth:`mark`.
 
         Args:
             spec: the spec whose failure indicators are being removed
@@ -649,11 +648,11 @@ class Database:
             self.database_directory.mkdir(parents=True, exist_ok=True)
 
     def write_transaction(self):
-        """Get a write lock context manager for use in a `with` block."""
+        """Get a write lock context manager for use in a ``with`` block."""
         return self._write_transaction_impl(self.lock, acquire=self._read, release=self._write)
 
     def read_transaction(self):
-        """Get a read lock context manager for use in a `with` block."""
+        """Get a read lock context manager for use in a ``with`` block."""
         return self._read_transaction_impl(self.lock, acquire=self._read)
 
     def _write_to_file(self, stream):
@@ -1711,7 +1710,7 @@ class Database:
 
             hashes: list of hashes used to restrict the search
 
-            install_tree: query 'all' (default), 'local', 'upstream', or upstream path
+            install_tree: query ``"all"`` (default), ``"local"``, ``"upstream"``, or upstream path
 
             origin: origin of the spec
         """

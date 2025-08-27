@@ -49,7 +49,7 @@ Here's the ``.gitlab-ci.yml`` file from that example that builds and runs the pi
 
 .. code-block:: yaml
 
-   stages: [ "generate", "build" ]
+   stages: ["generate", "build"]
 
    variables:
      SPACK_REPOSITORY: "https://github.com/spack/spack.git"
@@ -59,35 +59,31 @@ Here's the ``.gitlab-ci.yml`` file from that example that builds and runs the pi
 
    generate-pipeline:
      tags:
-       - saas-linux-small-amd64
+     - saas-linux-small-amd64
      stage: generate
      image:
        name: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01
      script:
-       - git clone ${SPACK_REPOSITORY}
-       - cd spack && git checkout ${SPACK_REF} && cd ../
-       - . "./spack/share/spack/setup-env.sh"
-       - spack --version
-       - spack env activate --without-view .
-       - spack -d -v --color=always
-         ci generate
-         --check-index-only
-         --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
-         --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+     - git clone ${SPACK_REPOSITORY}
+     - cd spack && git checkout ${SPACK_REF} && cd ../
+     - . "./spack/share/spack/setup-env.sh"
+     - spack --version
+     - spack env activate --without-view .
+     - spack -d -v --color=always ci generate --check-index-only --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir" --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
      artifacts:
        paths:
-         - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
 
    build-pipeline:
      stage: build
      trigger:
        include:
-         - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-           job: generate-pipeline
+       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+         job: generate-pipeline
        strategy: depend
      needs:
-       - artifacts: True
-         job: generate-pipeline
+     - artifacts: true
+       job: generate-pipeline
 
 
 The key thing to note above is that there are two jobs: The first job to run, ``generate-pipeline``, runs the ``spack ci generate`` command to generate a dynamic child pipeline and write it to a yaml file, which is then picked up by the second job, ``build-jobs``, and used to trigger the downstream pipeline.
@@ -120,7 +116,7 @@ And here's the Spack environment built by the pipeline represented as a ``spack.
        pipeline-gen:
        - any-job:
            tags:
-             - saas-linux-small-amd64
+           - saas-linux-small-amd64
            image:
              name: ghcr.io/spack/ubuntu20.04-runner-x86_64:2023-01-01
            before_script:
@@ -242,20 +238,20 @@ Note that ``--tests`` is passed to ``spack ci rebuild`` as part of the ``build-j
 
   ci:
     pipeline-gen:
-    - build-job
+    - build-job:
         script:
-          - . "./share/spack/setup-env.sh"
-          - spack --version
-          - cd ${SPACK_CONCRETE_ENV_DIR}
-          - spack env activate --without-view .
-          - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture.platform}-{architecture.target}/{name}-{version}-{hash}'"
-           - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
-           - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
-           - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
-           - spack -d ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+        - . "./share/spack/setup-env.sh"
+        - spack --version
+        - cd ${SPACK_CONCRETE_ENV_DIR}
+        - spack env activate --without-view .
+        - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture.platform}-{architecture.target}/{name}-{version}-{hash}'"
+        - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+        - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
+        - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
+        - spack -d ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
-     broken-tests-packages:
-       - gptune
+    broken-tests-packages:
+    - gptune
 
 In this case, even if ``gptune`` is successfully built from source, the pipeline will *not* run its stand-alone tests since the package is listed under ``broken-tests-packages``.
 
@@ -334,15 +330,15 @@ Following is an example of this section added to a ``spack.yaml``:
 .. code-block:: yaml
 
   spack:
-     ci:
-       pipeline-gen:
-       - noop-job:
-           tags: ["custom", "tag"]
-           image:
-             name: "some.image.registry/custom-image:latest"
-             entrypoint: ["/bin/bash"]
-           script::
-             - echo "Custom message in a custom script"
+    ci:
+      pipeline-gen:
+      - noop-job:
+          tags: ["custom", "tag"]
+          image:
+            name: "some.image.registry/custom-image:latest"
+            entrypoint: ["/bin/bash"]
+          script::
+          - echo "Custom message in a custom script"
 
 The example above illustrates how you can provide the attributes used to run the NO-OP job in the case of an empty pipeline.
 The only field for the NO-OP job that might be generated for you is ``script``, but that will only happen if you do not provide one yourself.
@@ -359,7 +355,7 @@ Here's an example of a Spack configuration file describing a build pipeline:
   ci:
     target: gitlab
 
-    rebuild_index: True
+    rebuild_index: true
 
     broken-specs-url: https://broken.specs.url
 
@@ -369,16 +365,16 @@ Here's an example of a Spack configuration file describing a build pipeline:
     pipeline-gen:
     - submapping:
       - match:
-          - os=ubuntu24.04
+        - os=ubuntu24.04
         build-job:
           tags:
-            - spack-kube
+          - spack-kube
           image: spack/ubuntu-noble
       - match:
-          - os=almalinux9
+        - os=almalinux9
         build-job:
           tags:
-            - spack-kube
+          - spack-kube
           image: spack/almalinux9
 
   cdash:
@@ -492,18 +488,19 @@ Here is an example configuration pointing to ``my-dyn-mapping.spack.io/allocatio
 .. code-block:: yaml
 
   ci:
-  - dynamic-mapping:
-      endpoint: my-dyn-mapping.spack.io/allocation
-      timeout: 10
-      verify_ssl: True
-      header:
-        PRIVATE_TOKEN: ${MY_PRIVATE_TOKEN}
-        MY_CONFIG: "fuzz_allocation:false"
-      allow:
-      - variables
-      ignore:
-      - script
-      require: []
+    pipeline-gen:
+    - dynamic-mapping:
+        endpoint: my-dyn-mapping.spack.io/allocation
+        timeout: 10
+        verify_ssl: true
+        header:
+          PRIVATE_TOKEN: ${MY_PRIVATE_TOKEN}
+          MY_CONFIG: "fuzz_allocation:false"
+        allow:
+        - variables
+        ignore:
+        - script
+        require: []
 
 
 Broken Specs URL
@@ -551,7 +548,7 @@ Once the jobs have been generated, the presence of a ``SPACK_CDASH_AUTH_TOKEN`` 
 .. _ci_artifacts:
 
 CI Artifacts Directory Layout
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------
 
 When running the CI build using the command ``spack ci rebuild`` a number of directories are created for storing data generated during the CI job.
 The default root directory for artifacts is ``job_scratch_root``.
@@ -561,18 +558,18 @@ The top-level directories under the artifact root are ``concrete_environment``, 
 Spack does not restrict what is written to any of these directories nor does it require user specified files be written to any specific directory.
 
 ``concrete_environment``
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 The directory ``concrete_environment`` is used to communicate the ``spack ci generate`` processed ``spack.yaml`` and the concrete ``spack.lock`` for the CI environment.
 
 ``logs``
---------
+^^^^^^^^
 
 The directory ``logs`` contains the Spack build log, ``spack-build-out.txt``, and the Spack build environment modification file, ``spack-build-mod-env.txt``.
 Additionally, all files specified by the packages ``Builder`` property ``archive_files`` are also copied here (i.e., ``CMakeCache.txt`` in ``CMakeBuilder``).
 
 ``reproduction``
-----------------
+^^^^^^^^^^^^^^^^
 
 The directory ``reproduction`` is used to store the files needed by the ``spack ci reproduce-build`` command.
 This includes ``repro.json``, copies of all of the files in ``concrete_environment``, the concrete spec JSON file for the current spec being built, and all of the files written in the artifacts root directory.
@@ -589,13 +586,13 @@ An example of what a ``repro.json`` may look like is here.
   }
 
 ``tests``
----------
+^^^^^^^^^
 
 The directory ``tests`` is used to store output from running ``spack test <job spec>``.
 This may or may not have data in it depending on the package that was built and the availability of tests.
 
 ``user_data``
--------------
+^^^^^^^^^^^^^
 
 The directory ``user_data`` is used to store everything else that shouldn't be copied to the ``reproduction`` directory.
 Users may use this to store additional logs or metrics or other types of files generated by the build job.
@@ -613,20 +610,18 @@ Here's the ``generate-pipeline`` job from the top of this document, updated to c
 
    generate-pipeline:
      tags:
-       - <some-other-tag>
-   before_script:
+     - <some-other-tag>
+     before_script:
      - git clone ${SPACK_REPO}
      - pushd spack && git checkout ${SPACK_REF} && popd
      - . "./spack/share/spack/setup-env.sh"
-   script:
+     script:
      - spack env activate --without-view .
-     - spack ci generate --check-index-only
-       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
-       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
-   after_script:
+     - spack ci generate --check-index-only --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir" --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
+     after_script:
      - rm -rf ./spack
-   artifacts:
-     paths:
+     artifacts:
+       paths:
        - "${CI_PROJECT_DIR}/jobs_scratch_dir"
 
 That takes care of getting the desired version of Spack when your pipeline is generated by ``spack ci generate``.
@@ -640,17 +635,17 @@ You also want your generated rebuild jobs (all of them) to clone that version of
        pipeline-gen:
        - build-job:
            tags:
-             - spack-kube
+           - spack-kube
            image: spack/ubuntu-noble
            before_script:
-             - git clone ${SPACK_REPO}
-             - pushd spack && git checkout ${SPACK_REF} && popd
-             - . "./spack/share/spack/setup-env.sh"
+           - git clone ${SPACK_REPO}
+           - pushd spack && git checkout ${SPACK_REF} && popd
+           - . "./spack/share/spack/setup-env.sh"
            script:
-             - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
-             - spack -d ci rebuild
+           - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
+           - spack -d ci rebuild
            after_script:
-             - rm -rf ./spack
+           - rm -rf ./spack
 
 Now all of the generated rebuild jobs will use the same shell script to clone Spack before running their actual workload.
 
@@ -681,32 +676,32 @@ Environment variables affecting pipeline operation
 Certain secrets and some other information should be provided to the pipeline infrastructure via environment variables, usually for reasons of security, but in some cases to support other pipeline use cases such as PR testing.
 The environment variables used by the pipeline infrastructure are described here.
 
-AWS_ACCESS_KEY_ID
-^^^^^^^^^^^^^^^^^
-
-Optional.
-Only needed when binary mirror is an S3 bucket.
-
-AWS_SECRET_ACCESS_KEY
+``AWS_ACCESS_KEY_ID``
 ^^^^^^^^^^^^^^^^^^^^^
 
 Optional.
 Only needed when binary mirror is an S3 bucket.
 
-S3_ENDPOINT_URL
-^^^^^^^^^^^^^^^
+``AWS_SECRET_ACCESS_KEY``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Optional.
+Only needed when binary mirror is an S3 bucket.
+
+``S3_ENDPOINT_URL``
+^^^^^^^^^^^^^^^^^^^
 
 Optional.
 Only needed when binary mirror is an S3 bucket that is *not* on AWS.
 
-CDASH_AUTH_TOKEN
-^^^^^^^^^^^^^^^^^
+``CDASH_AUTH_TOKEN``
+^^^^^^^^^^^^^^^^^^^^
 
 Optional.
 Only needed to report build groups to CDash.
 
-SPACK_SIGNING_KEY
-^^^^^^^^^^^^^^^^^
+``SPACK_SIGNING_KEY``
+^^^^^^^^^^^^^^^^^^^^^
 
 Optional.
 Only needed if you want ``spack ci rebuild`` to trust the key you store in this variable, in which case, it will subsequently be used to sign and verify binary packages (when installing or creating buildcaches).

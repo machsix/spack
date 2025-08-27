@@ -46,8 +46,7 @@ For example, if your package requires ``cuda_arch`` to be specified when ``cuda`
 
 .. code-block:: python
 
-    conflicts("cuda_arch=none", when="+cuda",
-              msg="CUDA architecture is required")
+    conflicts("cuda_arch=none", when="+cuda", msg="CUDA architecture is required")
 
 Similarly, if your software does not support all versions of the property, you could add ``conflicts`` to your package for those versions.
 For example, suppose your software does not work with CUDA compute capability versions prior to SM 5.0 (``50``).
@@ -55,14 +54,11 @@ You can add the following code to display a custom message should a user attempt
 
 .. code-block:: python
 
-    unsupported_cuda_archs = [
-        "10", "11", "12", "13",
-        "20", "21",
-        "30", "32", "35", "37"
-    ]
+    unsupported_cuda_archs = ["10", "11", "12", "13", "20", "21", "30", "32", "35", "37"]
     for value in unsupported_cuda_archs:
-        conflicts(f"cuda_arch={value}", when="+cuda",
-                  msg=f"CUDA architecture {value} is not supported")
+        conflicts(
+            f"cuda_arch={value}", when="+cuda", msg=f"CUDA architecture {value} is not supported"
+        )
 
 Methods
 ^^^^^^^
@@ -84,24 +80,25 @@ For example, you can add it to your :ref:`CMakePackage <cmakepackage>`-based pac
 .. code-block:: python
    :emphasize-lines: 1,7-16
 
-    class MyCudaPackage(CMakePackage, CudaPackage):
-        ...
-        def cmake_args(self):
-            spec = self.spec
-            args = []
-            ...
-            if spec.satisfies("+cuda"):
-                # Set up the CUDA macros needed by the build
-                args.append("-DWITH_CUDA=ON")
-                cuda_arch_list = spec.variants["cuda_arch"].value
-                cuda_arch = cuda_arch_list[0]
-                if cuda_arch != "none":
-                    args.append(f"-DCUDA_FLAGS=-arch=sm_{cuda_arch}")
-            else:
-                # Ensure build with CUDA is disabled
-                args.append("-DWITH_CUDA=OFF")
-            ...
-            return args
+   class MyCudaPackage(CMakePackage, CudaPackage):
+       ...
+
+       def cmake_args(self):
+           spec = self.spec
+           args = []
+           ...
+           if spec.satisfies("+cuda"):
+               # Set up the CUDA macros needed by the build
+               args.append("-DWITH_CUDA=ON")
+               cuda_arch_list = spec.variants["cuda_arch"].value
+               cuda_arch = cuda_arch_list[0]
+               if cuda_arch != "none":
+                   args.append(f"-DCUDA_FLAGS=-arch=sm_{cuda_arch}")
+           else:
+               # Ensure build with CUDA is disabled
+               args.append("-DWITH_CUDA=OFF")
+           ...
+           return args
 
 assuming only the ``WITH_CUDA`` and ``CUDA_FLAGS`` flags are required.
 You will need to customize options as needed for your build.

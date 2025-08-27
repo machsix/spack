@@ -8,10 +8,10 @@ multiple scopes with different levels of precedence.  See the
 documentation on :ref:`configuration-scopes` for details on how Spack's
 configuration system behaves.  The scopes are:
 
-  #. ``default``
-  #. ``system``
-  #. ``site``
-  #. ``user``
+#. ``default``
+#. ``system``
+#. ``site``
+#. ``user``
 
 Important functions in this module are:
 
@@ -517,8 +517,8 @@ class Configuration:
         """
         List of all scopes whose names match the provided regular expression.
 
-        For example, matching_scopes(r'^command') will return all scopes
-        whose names begin with `command`.
+        For example, ``matching_scopes(r'^command')`` will return all scopes
+        whose names begin with ``command``.
         """
         return [s for s in self.scopes.values() if re.search(reg_expr, s.name)]
 
@@ -690,11 +690,11 @@ class Configuration:
         Accepts a path syntax that allows us to grab nested config map
         entries.  Getting the 'config' section would look like::
 
-            spack.config.get('config')
+            spack.config.get("config")
 
         and the ``dirty`` section in the ``config`` scope would be::
 
-            spack.config.get('config:dirty')
+            spack.config.get("config:dirty")
 
         We use ``:`` as the separator, like YAML objects.
         """
@@ -1292,7 +1292,7 @@ def remove_yaml(dest, source):
     """UnMerges source from dest; entries in source take precedence over dest.
 
     This routine may modify dest and should be assigned to dest, in
-    case dest was None to begin with, e.g.:
+    case dest was None to begin with, e.g.::
 
        dest = remove_yaml(dest, source)
 
@@ -1302,7 +1302,7 @@ def remove_yaml(dest, source):
     appear as keys in ``dest``.
 
     Config file authors can optionally end any attribute in a dict
-    with `::` instead of `:`, and the key will remove the entire section
+    with ``::`` instead of ``:``, and the key will remove the entire section
     from ``dest``
     """
 
@@ -1446,27 +1446,29 @@ class ConfigPath:
 
 
 def process_config_path(path: str) -> List[str]:
-    """Process a path argument to config.set() that may contain overrides ('::' or
-    trailing ':')
+    """Process a path argument to config.set() that may contain overrides (``::`` or
+    trailing ``:``)
 
     Colons will be treated as static strings if inside of quotes,
-    e.g. `this:is:a:path:'value:with:colon'` will yield:
+    e.g. ``this:is:a:path:'value:with:colon'`` will yield:
 
-        [this, is, a, path, value:with:colon]
+    .. code-block:: text
 
-    The path may consist only of keys (e.g. for a `get`) or may end in a value.
+       [this, is, a, path, value:with:colon]
+
+    The path may consist only of keys (e.g. for a ``get``) or may end in a value.
     Keys are always strings: if a user encloses a key in quotes, the quotes
     should be removed. Values with quotes should be treated as strings,
     but without quotes, may be parsed as a different yaml object (e.g.
-    '{}' is a dict, but '"{}"' is a string).
+    ``'{}'`` is a dict, but ``'"{}"'`` is a string).
 
     This function does not know whether the final element of the path is a
     key or value, so:
 
-    * It must strip the quotes, in case it is a key (so we look for "key" and
-      not '"key"'))
+    * It must strip the quotes, in case it is a key (so we look for ``key`` and
+      not ``"key"``)
     * It must indicate somehow that the quotes were stripped, in case it is a
-      value (so that we don't process '"{}"' as a YAML dict)
+      value (so that we don't process ``"{}"`` as a YAML dict)
 
     Therefore, all elements with quotes are stripped, and then also converted
     to ``syaml_str`` (if treating the final element as a value, the caller

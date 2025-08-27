@@ -42,7 +42,7 @@ else:
 
 SYSTEM_DIRS = [os.path.join(p, s) for s in SUFFIXES for p in SYSTEM_PATHS] + SYSTEM_PATHS
 
-#: used in the compiler wrapper's `/usr/lib|/usr/lib64|...)` case entry
+#: used in the compiler wrapper's ``/usr/lib|/usr/lib64|...)`` case entry
 SYSTEM_DIR_CASE_ENTRY = "|".join(sorted(f'"{d}{suff}"' for d in SYSTEM_DIRS for suff in ("", "/")))
 
 _SHELL_SET_STRINGS = {
@@ -112,7 +112,7 @@ def env_flag(name: str) -> bool:
 
 
 def path_set(var_name: str, directories: List[Path]):
-    """Sets the variable passed as input to the `os.pathsep` joined list of directories."""
+    """Sets the variable passed as input to the ``os.pathsep`` joined list of directories."""
     path_str = os.pathsep.join(str(dir) for dir in directories)
     os.environ[var_name] = path_str
 
@@ -1073,19 +1073,19 @@ def inspect_path(
     ``/usr/include`` and ``/usr/lib64``. If found we want to prepend
     ``/usr/include`` to ``CPATH`` and ``/usr/lib64`` to ``MY_LIB64_PATH``.
 
-        .. code-block:: python
+    .. code-block:: python
 
-            # Set up the dictionary containing the inspection
-            inspections = {
-                'include': ['CPATH'],
-                'lib64': ['MY_LIB64_PATH']
-            }
+        # Set up the dictionary containing the inspection
+        inspections = {
+            "include": ["CPATH"],
+            "lib64": ["MY_LIB64_PATH"]
+        }
 
-            # Get back the list of command needed to modify the environment
-            env = inspect_path('/usr', inspections)
+        # Get back the list of command needed to modify the environment
+        env = inspect_path("/usr", inspections)
 
-            # Eventually execute the commands
-            env.apply_modifications()
+        # Eventually execute the commands
+        env.apply_modifications()
     """
     if exclude is None:
         exclude = lambda x: False
