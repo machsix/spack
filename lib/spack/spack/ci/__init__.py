@@ -95,7 +95,7 @@ def get_change_revisions(path: str) -> Tuple[Optional[str], Optional[str]]:
 def filter_added_checksums(
     checksums: Iterable[str], path: str, from_ref: str = "HEAD~1", to_ref: str = "HEAD"
 ) -> List[str]:
-    """Get a list of the version checksums added between ``from_ref`` and ```to_ref``.
+    """Get a list of the version checksums added between ``from_ref`` and ``to_ref``.
 
     Args:
        checksums: an iterable of checksums to look for in the diff
@@ -861,7 +861,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
 
 
 def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head):
-    """Given a url to gitlab artifacts.zip from a failed 'spack ci rebuild' job,
+    """Given a url to gitlab artifacts.zip from a failed ``spack ci rebuild`` job,
     attempt to setup an environment in which the failure can be reproduced
     locally.  This entails the following:
 
