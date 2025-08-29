@@ -614,6 +614,39 @@ So, if the sources are at ``http://example.com/downloads/foo-1.0.tar.gz``, Spack
 If you need to search another path for download links, you can supply some extra attributes that control how your package finds new versions.
 See the documentation on :ref:`attribute_list_url` and :ref:`attribute_list_depth`.
 
+.. _git_version_provenance:
+
+Git Version Provenance
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Checksummed assets are preferred but there are a few notable exceptions such as git branches and tags i.e ``pkg@develop``.
+These versions do not naturally have source provenance because they refer to a range of commits (branches) or can be changed outside the spack packaging infrastructure (tags).
+Without source provenance we cannot have full provenance.
+
+Spack has a reserved variant to allow users to complete provenance for these cases: ``pkg@develop commit=<SHA>``.
+The ``commit`` variant must be supplied using the full 40 character commit SHA.
+Using a partial commit SHA or assigning the ``commit`` variant to a version that is not using a branch or tag reference will lead to an error during concretization.
+
+Spack will attempt to establish git version provenance by looking up commit SHA's for branch and tag based versions during concretization.
+There are 3 sources that it uses.
+In order, they are
+
+1. The local cached downloads (already cached source code for the version needing provenance)
+2. Source mirrors (compressed archives of the source code)
+3. The git url provided in the package definition
+
+If Spack is unable to determine what the commit should be during concretization a warning will be issued.
+Users may also specify which commit SHA they want with the spec since it is simply a variant.
+In this case, or in the case of develop specs (see :ref:`develop-specs`), Spack will skip attempts to assign the commit SHA automatically.
+
+.. note::
+
+   Users wanting to track the latest commits from the internet should utilize ``spack clean --downloads`` prior to concretization to clean out cached downloads that will short-circuit internet queries.
+   Disabling source mirrors or ensuring they don't contain branch/tag based versions will also be necessary.
+
+   Above all else, the most robust way to ensure binaries have their desired commits is to provide the SHAs via user-specs or config i.e. ``commit=<SHA>``.
+
+
 
 .. _attribute_list_url:
 
@@ -892,7 +925,7 @@ The destination directory for the clone is the standard stage source path.
    **Trusted Downloads.**
    It is critical from a security and reproducibility standpoint that Spack be able to verify the downloaded source.
 
-   Providing the full ``commit`` SHA hash allows for Spack to preserve binary provenance for all binaries since git commits are guaranteed to be unique points in the git history.
+   Providing the full ``commit`` SHA hash allows for Spack to preserve provenance for all binaries since git commits are guaranteed to be unique points in the git history.
    Whereas, the mutable nature of branches and tags cannot provide such a guarantee.
 
    A git download *is trusted* only if the full commit SHA is specified.

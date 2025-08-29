@@ -1054,24 +1054,20 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         return False
 
-    def resolve_binary_provenance(self) -> None:
-        """
-        Method to ensure concrete spec has binary provenance.
-        Base implementation will look up git commits when appropriate.
-        Packages may override this implementation for custom implementations
-        """
+    @classmethod
+    def _resolve_git_provenance(cls, spec) -> None:
         # early return cases, don't overwrite user intention
         # commit pre-assigned or develop specs don't need commits changed
         # since this would create un-necessary churn
-        if "commit" in self.spec.variants or self.spec.is_develop:
+        if "commit" in spec.variants or spec.is_develop:
             return
 
-        if is_git_version(str(self.spec.version)):
-            ref = self.spec.version.ref
+        if is_git_version(str(spec.version)):
+            ref = spec.version.ref
         else:
-            v_attrs = self.versions.get(self.spec.version, {})
+            v_attrs = cls.versions.get(spec.version, {})
             if "commit" in v_attrs:
-                self.spec.variants["commit"] = spack.variant.SingleValuedVariant(
+                spec.variants["commit"] = spack.variant.SingleValuedVariant(
                     "commit", v_attrs["commit"]
                 )
                 return
@@ -1079,33 +1075,44 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         if not ref:
             raise VersionError(
-                f"{self.name}'s version {str(self.spec.version)} "
+                f"{spec.name}'s version {str(spec.version)} "
                 "is missing a git ref (commit, tag or branch)"
             )
 
         # Look for commits in the following places:
-        # 1) stage,                (cheap, local, static)
-        # 2) mirror archive file,  (cheapish, local, staticish)
-        # 3) URL                   (cheap, remote, dynamic)
-        # If users pre-stage, or use a mirror they can expect consistent commit resolution
+        # 1) mirror archive file,  (cheapish, local, staticish)
+        # 2) URL                   (cheap, remote, dynamic)
+        #
+        # If users pre-stage (_LOCAL_CACHE), or use a mirror they can expect
+        # consistent commit resolution
         sha = None
-        if self.stage.expanded:
-            sha = spack.util.git.get_commit_sha(self.stage.source_path, ref)
+
+        # construct a package instance to get fetch/staging together
+        pkg_instance = cls(spec.copy())
+
+        try:
+            pkg_instance.do_fetch(mirror_only=True)
+        except spack.error.FetchError:
+            pass
+        if pkg_instance.stage.archive_file:
+            sha = spack.util.archive.retrieve_commit_from_archive(
+                pkg_instance.stage.archive_file, ref
+            )
 
         if not sha:
-            try:
-                self.do_fetch(mirror_only=True)
-            except spack.error.FetchError:
-                pass
-            if self.stage.archive_file:
-                sha = spack.util.archive.retrieve_commit_from_archive(self.stage.archive_file, ref)
-
-        if not sha:
-            url = self.version_or_package_attr("git", self.spec.version)
+            url = cls.version_or_package_attr("git", spec.version)
             sha = spack.util.git.get_commit_sha(url, ref)
 
         if sha:
-            self.spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)
+            spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)
+
+    def resolve_binary_provenance(self):
+        """
+        Method to ensure concrete spec has binary provenance.
+        Base implementation will look up git commits when appropriate.
+        Packages may override this implementation for custom implementations
+        """
+        self._resolve_git_provenance(self.spec)
 
     def all_urls_for_version(self, version: StandardVersion) -> List[str]:
         """Return all URLs derived from version_urls(), url, urls, and

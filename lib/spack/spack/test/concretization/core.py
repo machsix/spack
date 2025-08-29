@@ -4078,7 +4078,6 @@ def test_caret_in_input_cannot_set_transitive_build_dependencies(default_mock_co
 
 @pytest.mark.regression("51167")
 @pytest.mark.require_provenance
-@pytest.mark.xfail(reason="This is a bug in the solver, related to the 'commit=' variant")
 def test_commit_variant_enters_the_hash(mutable_config, mock_packages, monkeypatch):
     """Tests that an implicit commit variant, obtained from resolving the commit sha of a branch,
     enters the hash of the spec.
@@ -4086,18 +4085,14 @@ def test_commit_variant_enters_the_hash(mutable_config, mock_packages, monkeypat
 
     first_call = True
 
-    def _mock_resolve(pkg_self) -> None:
+    def _mock_resolve(spec) -> None:
         if first_call:
-            pkg_self.spec.variants["commit"] = spack.variant.SingleValuedVariant(
-                "commit", f"{'b' * 40}"
-            )
+            spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", f"{'b' * 40}")
             return
 
-        pkg_self.spec.variants["commit"] = spack.variant.SingleValuedVariant(
-            "commit", f"{'a' * 40}"
-        )
+        spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", f"{'a' * 40}")
 
-    monkeypatch.setattr(spack.package_base.PackageBase, "resolve_binary_provenance", _mock_resolve)
+    monkeypatch.setattr(spack.package_base.PackageBase, "_resolve_git_provenance", _mock_resolve)
 
     before = spack.concretize.concretize_one("git-ref-package@develop")
     first_call = False
