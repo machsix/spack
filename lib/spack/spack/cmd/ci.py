@@ -32,9 +32,10 @@ import spack.util.gpg as gpg_util
 import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
-import spack.version
 from spack.llnl.util import tty
 from spack.version import StandardVersion
+
+from . import doc_dedented, doc_first_line
 
 description = "manage continuous integration pipelines"
 section = "build"
@@ -61,9 +62,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
     # Dynamic generation of the jobs yaml from a spack environment
     generate = subparsers.add_parser(
-        "generate",
-        description=deindent(ci_generate.__doc__),
-        help=spack.cmd.first_line(ci_generate.__doc__),
+        "generate", description=doc_dedented(ci_generate), help=doc_first_line(ci_generate)
     )
     generate.add_argument(
         "--output-file",
@@ -159,17 +158,13 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # Rebuild the buildcache index associated with the mirror in the
     # active, gitlab-enabled environment.
     index = subparsers.add_parser(
-        "rebuild-index",
-        description=deindent(ci_reindex.__doc__),
-        help=spack.cmd.first_line(ci_reindex.__doc__),
+        "rebuild-index", description=doc_dedented(ci_reindex), help=doc_first_line(ci_reindex)
     )
     index.set_defaults(func=ci_reindex)
 
     # Handle steps of a ci build/rebuild
     rebuild = subparsers.add_parser(
-        "rebuild",
-        description=deindent(ci_rebuild.__doc__),
-        help=spack.cmd.first_line(ci_rebuild.__doc__),
+        "rebuild", description=doc_dedented(ci_rebuild), help=doc_first_line(ci_rebuild)
     )
     rebuild.add_argument(
         "-t",
@@ -196,8 +191,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # Facilitate reproduction of a failed CI build job
     reproduce = subparsers.add_parser(
         "reproduce-build",
-        description=deindent(ci_reproduce.__doc__),
-        help=spack.cmd.first_line(ci_reproduce.__doc__),
+        description=doc_dedented(ci_reproduce),
+        help=doc_first_line(ci_reproduce),
     )
     reproduce.add_argument(
         "job_url", help="URL of GitLab job web page or artifact", type=_gitlab_artifacts_url
@@ -234,8 +229,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # Verify checksums inside of ci workflows
     verify_versions = subparsers.add_parser(
         "verify-versions",
-        description=deindent(ci_verify_versions.__doc__),
-        help=spack.cmd.first_line(ci_verify_versions.__doc__),
+        description=doc_dedented(ci_verify_versions),
+        help=doc_first_line(ci_verify_versions),
     )
     verify_versions.add_argument("from_ref", help="git ref from which start looking at changes")
     verify_versions.add_argument("to_ref", help="git ref to end looking at changes")
@@ -243,7 +238,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def ci_generate(args):
-    """generate jobs file from a CI-aware spack file
+    """\
+    generate jobs file from a CI-aware spack file
 
     if you want to report the results on CDash, you will need to set the SPACK_CDASH_AUTH_TOKEN
     before invoking this command. the value must be the CDash authorization token needed to create
@@ -254,7 +250,8 @@ def ci_generate(args):
 
 
 def ci_reindex(args):
-    """rebuild the buildcache index for the remote mirror
+    """\
+    rebuild the buildcache index for the remote mirror
 
     use the active, gitlab-enabled environment to rebuild the buildcache index for the associated
     mirror
@@ -274,7 +271,8 @@ def ci_reindex(args):
 
 
 def ci_rebuild(args):
-    """rebuild a spec if it is not on the remote mirror
+    """\
+    rebuild a spec if it is not on the remote mirror
 
     check a single spec against the remote mirror, and rebuild it from source if the mirror does
     not contain the hash
@@ -656,7 +654,8 @@ If this project does not have public pipelines, you will need to first:
 
 
 def ci_reproduce(args):
-    """generate instructions for reproducing the spec rebuild job
+    """\
+    generate instructions for reproducing the spec rebuild job
 
     artifacts of the provided gitlab pipeline rebuild job's URL will be used to derive
     instructions for reproducing the build locally
@@ -816,7 +815,8 @@ def validate_git_versions(
 
 
 def ci_verify_versions(args):
-    """validate version checksum & commits between git refs
+    """\
+    validate version checksum & commits between git refs
     This command takes a from_ref and to_ref arguments and
     then parses the git diff between the two to determine which packages
     have been modified verifies the new checksums inside of them.
