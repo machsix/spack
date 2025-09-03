@@ -61,6 +61,7 @@ import spack.schema.toolchains
 import spack.schema.upstreams
 import spack.schema.view
 import spack.util.remote_file_cache as rfc_util
+import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.llnl.util import filesystem, lang, tty
 from spack.util.cpus import cpus_available
@@ -758,12 +759,26 @@ class Configuration:
         """Iterate over scopes in this configuration."""
         yield from self.scopes.values()
 
-    def print_section(self, section: str, blame: bool = False, *, scope=None) -> None:
-        """Print a configuration to stdout."""
+    def print_section(
+        self, section: str, yaml: bool = True, blame: bool = False, *, scope: Optional[str] = None
+    ) -> None:
+        """Print a configuration to stdout.
+
+        Arguments:
+            section: The configuration section to print.
+            yaml: If True, output in YAML format, otherwise JSON (ignored when blame is True).
+            blame: Whether to include source locations for each entry.
+            scope: The configuration scope to use.
+        """
         try:
             data = syaml.syaml_dict()
             data[section] = self.get_config(section, scope=scope)
-            syaml.dump_config(data, stream=sys.stdout, default_flow_style=False, blame=blame)
+            if yaml or blame:
+                syaml.dump_config(data, stream=sys.stdout, default_flow_style=False, blame=blame)
+            else:
+                sjson.dump(data, sys.stdout)
+                sys.stdout.write("\n")
+
         except (syaml.SpackYAMLError, OSError) as e:
             raise spack.error.ConfigError(f"cannot read '{section}' configuration") from e
 
