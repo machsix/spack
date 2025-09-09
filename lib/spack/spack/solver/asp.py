@@ -3548,6 +3548,9 @@ def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["s
     return result, rejected
 
 
+FunctionTupleT = Tuple[str, Tuple[Union[str, NodeArgument], ...]]
+
+
 class SpecBuilder:
     """Class with actions to rebuild a spec from ASP results."""
 
@@ -3822,36 +3825,22 @@ class SpecBuilder:
         )
         self._splices.setdefault(parent_spec, []).append(splice)
 
-    @staticmethod
-    def sort_fn(function_tuple) -> Tuple[int, int]:
-        """Ensure attributes are evaluated in the correct order.
+    def build_specs(self, function_tuples: List[FunctionTupleT]) -> List[spack.spec.Spec]:
 
-        hash attributes are handled first, since they imply entire concrete specs
-        node attributes are handled next, since they instantiate nodes
-        external_spec_selected attributes are handled last, so that external extensions can find
-        the concrete specs on which they depend because all nodes are fully constructed before we
-        consider which ones are external.
-        """
-        name = function_tuple[0]
-        if name == "hash":
-            return (-5, 0)
-        elif name == "node":
-            return (-4, 0)
-        elif name == "node_flag":
-            return (-2, 0)
-        elif name == "external_spec_selected":
-            return (0, 0)  # note out of order so this goes last
-        elif name == "virtual_on_edge":
-            return (1, 0)
-        else:
-            return (-1, 0)
+        attr_key = {
+            # hash attributes are handled first, since they imply entire concrete specs
+            "hash": -5,
+            # node attributes are handled next, since they instantiate nodes
+            "node": -4,
+            # evaluated last, so all nodes are fully constructed
+            "external_spec_selected": 1,
+            "virtual_on_edge": 2,
+        }
 
-    def build_specs(self, function_tuples):
-        # Functions don't seem to be in particular order in output. Sort them here so that
-        # directives that build objects, like node, are called in the right order.
-        self.function_tuples = sorted(set(function_tuples), key=self.sort_fn)
+        # Sort functions so that directives building objects are called in the right order
+        function_tuples.sort(key=lambda x: attr_key.get(x[0], 0))
         self._specs = {}
-        for name, args in self.function_tuples:
+        for name, args in function_tuples:
             if SpecBuilder.ignored_attributes.match(name):
                 continue
 
@@ -3874,6 +3863,11 @@ class SpecBuilder:
             # predicates on virtual packages.
             if name != "error":
                 node = args[0]
+                assert isinstance(node, NodeArgument), (
+                    f"internal solver error: expected a node, but got a {type(args[0])}. "
+                    "Please report a bug at https://github.com/spack/spack/issues"
+                )
+
                 pkg = node.pkg
                 if spack.repo.PATH.is_virtual(pkg):
                     continue
@@ -3882,7 +3876,7 @@ class SpecBuilder:
                 # do not bother calling actions on it except for node_flag_source,
                 # since node_flag_source is tracking information not in the spec itself
                 # we also need to keep track of splicing information.
-                spec = self._specs.get(args[0])
+                spec = self._specs.get(node)
                 if spec and spec.concrete:
                     do_not_ignore_attrs = ["node_flag_source", "splice_at_hash"]
                     if name not in do_not_ignore_attrs:
