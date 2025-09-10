@@ -84,7 +84,7 @@ from .core import (
     using_libc_compatibility,
 )
 from .input_analysis import create_counter, create_graph_analyzer
-from .requirements import RequirementKind, RequirementParser, RequirementRule
+from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
 from .reuse import ReusableSpecsSelector, SpecFilter
 from .runtimes import RuntimePropertyRecorder, _external_config_with_implicit_externals
 from .versions import DeclaredVersion, Provenance, concretization_version_order
@@ -2043,29 +2043,42 @@ class SpackSolverSetup:
 
             self.gen.newline()
 
-    def virtual_preferences(self, pkg_name, func):
-        """Call func(vspec, provider, i) for each of pkg's provider prefs."""
-        config = spack.config.get("packages")
-        pkg_prefs = config.get(pkg_name, {}).get("providers", {})
-        for vspec, providers in pkg_prefs.items():
-            if vspec not in self.possible_virtuals:
+    def virtual_requirements_and_weights(self):
+        virtual_preferences = spack.config.CONFIG.get("packages:all:providers", {})
+
+        self.gen.h1("Virtual requirements and weights")
+        for virtual_str in sorted(self.possible_virtuals):
+            self.gen.newline()
+            self.gen.h2(f"Virtual: {virtual_str}")
+            self.gen.fact(fn.virtual(virtual_str))
+
+            rules = self.requirement_parser.rules_from_virtual(virtual_str)
+            if not rules and virtual_str not in virtual_preferences:
                 continue
 
-            for i, provider in enumerate(providers):
+            required, preferred, removed = [], [], set()
+            for rule in rules:
+                # We don't deal with conditional requirements
+                if rule.condition != spack.spec.Spec():
+                    continue
+
+                if rule.origin == RequirementOrigin.PREFER_YAML:
+                    preferred.extend(x.name for x in rule.requirements if x.name)
+                elif rule.origin == RequirementOrigin.REQUIRE_YAML:
+                    required.extend(x.name for x in rule.requirements if x.name)
+                elif rule.origin == RequirementOrigin.CONFLICT_YAML:
+                    conflict_spec = rule.requirements[0]
+                    # For conflicts, we take action only if just a name is used
+                    if spack.spec.Spec(conflict_spec.name).satisfies(conflict_spec):
+                        removed.add(conflict_spec.name)
+
+            current_preferences = required + preferred + virtual_preferences.get(virtual_str, [])
+            current_preferences = [x for x in current_preferences if x not in removed]
+            for i, provider in enumerate(spack.llnl.util.lang.dedupe(current_preferences)):
                 provider_name = spack.spec.Spec(provider).name
-                func(vspec, provider_name, i)
+                self.gen.fact(fn.provider_weight_from_config(virtual_str, provider_name, i))
             self.gen.newline()
 
-    def provider_defaults(self):
-        self.gen.h2("Default virtual providers")
-        self.virtual_preferences(
-            "all", lambda v, p, i: self.gen.fact(fn.default_provider_preference(v, p, i))
-        )
-
-    def provider_requirements(self):
-        self.gen.h2("Requirements on virtual providers")
-        for virtual_str in sorted(self.possible_virtuals):
-            rules = self.requirement_parser.rules_from_virtual(virtual_str)
             if rules:
                 self.emit_facts_from_requirement_rules(rules)
                 self.trigger_rules()
@@ -2843,12 +2856,6 @@ class SpackSolverSetup:
         self.default_targets = list(sorted(set(self.default_targets)))
         self.target_preferences()
 
-    def virtual_providers(self):
-        self.gen.h2("Virtual providers")
-        for vspec in sorted(self.possible_virtuals):
-            self.gen.fact(fn.virtual(vspec))
-        self.gen.newline()
-
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
 
@@ -3124,9 +3131,7 @@ class SpackSolverSetup:
         self.os_defaults(specs + dev_specs)
         self.target_defaults(specs + dev_specs)
 
-        self.virtual_providers()
-        self.provider_defaults()
-        self.provider_requirements()
+        self.virtual_requirements_and_weights()
         self.external_packages()
 
         # TODO: make a config option for this undocumented feature
